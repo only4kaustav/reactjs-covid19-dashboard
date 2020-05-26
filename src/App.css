@@ -37,6 +37,8 @@ th {
   cursor: pointer;
 }
 
+th.slno{cursor: auto;}
+
 tr:nth-child(even) {
   background-color: #dddddd;
 }
