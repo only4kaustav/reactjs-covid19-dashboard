@@ -72,13 +72,12 @@ export default class CovidData extends React.Component {
       this.dataMatch()
     })
   }
-  
+
   dataMatch() {
     this.setState({
-      countries: this.state.allCountriesData.filter((obj) => JSON.stringify(obj)
-        .toLowerCase()
-        .indexOf(this.state.search.toLowerCase()) !== -1
-      )
+      countries: _.filter(this.state.allCountriesData, function(cdata) {
+        return (cdata.country + '|' + cdata.tests + '|'  + this.formatDate(cdata.updated) + '|' + cdata.cases + '|' + cdata.deaths + '|' + cdata.recovered + '|' + cdata.todayCases + '|' + cdata.todayDeaths).toLowerCase().indexOf(this.state.search.toLowerCase()) !== -1; 
+      }.bind(this))
     });
   }
 
@@ -100,13 +99,13 @@ export default class CovidData extends React.Component {
           <table>
             <thead key="thead">
               <tr>
-                  <th width="20%" onClick={() => this.dataSortBy('country')}>Country<small className={(this.state.sort.column === 'country') ? this.state.sort.direction : ''}></small></th><th width="20%" onClick={() => this.dataSortBy('updated')}>Last Updated <small className={(this.state.sort.column === 'updated') ? this.state.sort.direction : ''}></small></th><th width="10%" onClick={() => this.dataSortBy('tests')}>Total Tests <small className={(this.state.sort.column === 'tests') ? this.state.sort.direction : ''}></small></th><th width="10%" onClick={() => this.dataSortBy('cases')}>Cases <small className={(this.state.sort.column === 'cases') ? this.state.sort.direction : ''}></small></th><th width="10%" onClick={() => this.dataSortBy('deaths')}>Deaths <small className={(this.state.sort.column === 'deaths') ? this.state.sort.direction : ''}></small></th><th width="10%" onClick={() => this.dataSortBy('recovered')}>Recovered <small className={(this.state.sort.column === 'recovered') ? this.state.sort.direction : ''}></small></th><th width="10%" onClick={() => this.dataSortBy('todayCases')}>Today's Cases <small className={(this.state.sort.column === 'todayCases') ? this.state.sort.direction : ''}></small></th><th width="10%" onClick={() => this.dataSortBy('todayDeaths')}>Today's Deaths <small className={(this.state.sort.column === 'todayDeaths') ? this.state.sort.direction : ''}></small></th>
+                  <th width="5%">SL No.</th><th width="20%" onClick={() => this.dataSortBy('country')}>Country<small className={(this.state.sort.column === 'country') ? this.state.sort.direction : ''}></small></th><th width="15%" onClick={() => this.dataSortBy('updated')}>Last Updated <small className={(this.state.sort.column === 'updated') ? this.state.sort.direction : ''}></small></th><th width="10%" onClick={() => this.dataSortBy('tests')}>Total Tests <small className={(this.state.sort.column === 'tests') ? this.state.sort.direction : ''}></small></th><th width="10%" onClick={() => this.dataSortBy('cases')}>Cases <small className={(this.state.sort.column === 'cases') ? this.state.sort.direction : ''}></small></th><th width="10%" onClick={() => this.dataSortBy('deaths')}>Deaths <small className={(this.state.sort.column === 'deaths') ? this.state.sort.direction : ''}></small></th><th width="10%" onClick={() => this.dataSortBy('recovered')}>Recovered <small className={(this.state.sort.column === 'recovered') ? this.state.sort.direction : ''}></small></th><th width="10%" onClick={() => this.dataSortBy('todayCases')}>Today's Cases <small className={(this.state.sort.column === 'todayCases') ? this.state.sort.direction : ''}></small></th><th width="10%" onClick={() => this.dataSortBy('todayDeaths')}>Today's Deaths <small className={(this.state.sort.column === 'todayDeaths') ? this.state.sort.direction : ''}></small></th>
               </tr>
             </thead>
             <tbody>
             { countries.map((country, index) => (
                 <tr key={index}>
-                  <td><img src={country.countryInfo.flag} width="24" alt={country.country} valign="middle"/>&nbsp;&nbsp;{country.country}</td><td>{this.formatDate(country.updated)}</td><td>{country.tests}</td><td>{country.cases}</td><td>{country.deaths}</td><td>{country.recovered}</td><td>{country.todayCases}</td><td>{country.todayDeaths}</td>
+                  <td>{index+1}.</td><td><img src={country.countryInfo.flag} width="24" alt={country.country} valign="middle"/>&nbsp;&nbsp;<strong>{country.country}</strong></td><td>{this.formatDate(country.updated)}</td><td>{country.tests}</td><td>{country.cases}</td><td>{country.deaths}</td><td>{country.recovered}</td><td>{country.todayCases}</td><td>{country.todayDeaths}</td>
                 </tr>
             ))}
             </tbody>
