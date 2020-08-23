@@ -42,7 +42,7 @@ export default class CovidData extends React.Component {
     })
   }
   
-  formatDate(datestring) {
+  formatDate = (datestring) => {
     let dateTime = new Date(datestring);
     // year as 4 digits (YYYY)
     var year = dateTime.getFullYear();
@@ -64,14 +64,14 @@ export default class CovidData extends React.Component {
     return date + '/' + month + '/' + year + ' ' + hours + ':' + minutes + ':' + seconds;
   }
   
-  continentInfo(data) {
+  continentInfo = (data) => {
     //console.log(data);
     const result = _.countBy(data, "continent");
     //const result = data.map((items, index)=>({continent: items.continent, count: items.continent.length }))
     console.log(result);
   }
   
-  dataSortBy(key) {
+  dataSortBy = (key) => {
     let direction = 'asc';
     if (key === this.state.sort.column) {
       direction = this.state.sort.direction === 'asc' ? 'desc' : 'asc';
@@ -85,7 +85,7 @@ export default class CovidData extends React.Component {
     });
   }
   
-  findData(e) {
+  findData = (e) => {
     this.setState({
       search: e.target.value,
     }, () => {
@@ -93,15 +93,15 @@ export default class CovidData extends React.Component {
     })
   }
 
-  dataMatch() {
+  dataMatch = () => {
     this.setState({
       countries: _.filter(this.state.allCountriesData, function(cdata) {
         return (cdata.country + '|' + cdata.continent + '|' + cdata.tests + '|'  + this.formatDate(cdata.updated) + '|' + cdata.cases + '|' + cdata.deaths + '|' + cdata.recovered + '|' + cdata.todayCases + '|' + cdata.todayDeaths).toLowerCase().indexOf(this.state.search.toLowerCase()) !== -1; 
       }.bind(this))
     });
   }
-  
-  setLocationData(location, type) {
+   
+  setLocationData = (location, type) => {
     let locationArr = [];
     let locationDataObj = _.filter(this.state.allCountriesData, [type, location]);
     locationDataObj.forEach(function(loc){
@@ -113,13 +113,13 @@ export default class CovidData extends React.Component {
     return locationArr;
   }
   
-  setChart(e) {
+  setChart = (e) => {
     this.setState({
       chartType: e.target.value,
     })
   }
   
-  getChartData(location, type) {
+  getChartData = (location, type) => {
     this.setState({
       locationData: this.setLocationData(location, type),
     }, () => {
@@ -155,12 +155,12 @@ export default class CovidData extends React.Component {
       return <div>didn't get data</div>;
     }
     
-    const Modal = ({ country, close }) => (
+    const Modal = ({ location, close, flag }) => (
       <div className="modal">
         <span className="close" onClick={close}>
           &times;
         </span>
-        <div className="header">Statistics of {country}</div>
+        <div className="header">Statistics of {location} {flag ? <img src={flag} width="32" alt={location} valign="middle"/> : ''}</div>
         <div className="content">
           <Pie
             data={this.state.chartData}
@@ -181,6 +181,19 @@ export default class CovidData extends React.Component {
     );
     
     let countries = this.state.countries;
+    // field_name, field_width, field_lebel, field_sortable, field_have_img, field_have_chart, field_is_date
+    const fieldArr = [
+      ['slno', '5', 'SL No.', 0, 0, 0, 0],
+      ['country', '15', 'Country', 1, 1, 1, 0],
+      ['continent', '10', 'Continent', 1, 0, 1, 0],
+      ['updated', '10', 'Last Updated', 1, 0, 0, 1],
+      ['tests', '10', 'Total Tests', 1, 0, 0, 0],
+      ['cases', '10', 'Cases', 1, 0, 0, 0],
+      ['deaths', '10', 'Deaths', 1, 0, 0, 0],
+      ['recovered', '10', 'Recovered', 1, 0, 0, 0],
+      ['todayCases', '10', 'Today\'s Cases', 1, 0, 0, 0],
+      ['todayDeaths', '10', 'Today\'s Deaths', 1, 0, 0, 0],
+    ];
 
     return (
       <div>
@@ -189,13 +202,21 @@ export default class CovidData extends React.Component {
           <table>
             <thead key="thead">
               <tr>
-                  <th width="5%" className="slno">SL No.</th><th width="15%" onClick={() => this.dataSortBy('country')}>Country<small className={(this.state.sort.column === 'country') ? this.state.sort.direction : ''}></small></th><th width="10%" onClick={() => this.dataSortBy('continent')}>Continent<small className={(this.state.sort.column === 'continent') ? this.state.sort.direction : ''}></small></th><th width="10%" onClick={() => this.dataSortBy('updated')}>Last Updated <small className={(this.state.sort.column === 'updated') ? this.state.sort.direction : ''}></small></th><th width="10%" onClick={() => this.dataSortBy('tests')}>Total Tests <small className={(this.state.sort.column === 'tests') ? this.state.sort.direction : ''}></small></th><th width="10%" onClick={() => this.dataSortBy('cases')}>Cases <small className={(this.state.sort.column === 'cases') ? this.state.sort.direction : ''}></small></th><th width="10%" onClick={() => this.dataSortBy('deaths')}>Deaths <small className={(this.state.sort.column === 'deaths') ? this.state.sort.direction : ''}></small></th><th width="10%" onClick={() => this.dataSortBy('recovered')}>Recovered <small className={(this.state.sort.column === 'recovered') ? this.state.sort.direction : ''}></small></th><th width="10%" onClick={() => this.dataSortBy('todayCases')}>Today's Cases <small className={(this.state.sort.column === 'todayCases') ? this.state.sort.direction : ''}></small></th><th width="10%" onClick={() => this.dataSortBy('todayDeaths')}>Today's Deaths <small className={(this.state.sort.column === 'todayDeaths') ? this.state.sort.direction : ''}></small></th>
+                { fieldArr.map((field, index) => (
+                  <th key={index} width={field[1] + '%'} className={field[3] ? undefined : field[0]} onClick={field[3] ? () => this.dataSortBy(field[0]) : undefined}>{field[2]} {field[3] ? <small className={(this.state.sort.column === field[0]) ? this.state.sort.direction : ''}></small> : undefined}</th>
+                ))}
               </tr>
             </thead>
             <tbody>
             { countries.map((country, index) => (
                 <tr key={index}> 
-                  <td>{index+1}.</td><td className="country"><img src={country.countryInfo.flag} width="24" alt={country.country} valign="middle"/>&nbsp;&nbsp;<u onClick={() => this.getChartData(country.country, 'country')}><Popup trigger={<span>{country.country}</span>} modal closeOnDocumentClick>{close => (<Modal country={country.country} close={close}/>)}</Popup></u></td><td><u onClick={() => this.getChartData(country.continent, 'continent')}><Popup trigger={<span>{country.continent}</span>} modal closeOnDocumentClick>{close => (<Modal country={country.continent} close={close}/>)}</Popup></u></td><td>{this.formatDate(country.updated)}</td><td>{country.tests}</td><td>{country.cases}</td><td>{country.deaths}</td><td>{country.recovered}</td><td>{country.todayCases}</td><td>{country.todayDeaths}</td>
+                  { fieldArr.map((field, inner_index) => (
+                    <td key={index + '_' + inner_index} className={field[0]}>
+                      {field[4] ? <img src={country.countryInfo.flag} width="32" alt={country[field[0]]} valign="middle"/> : ''}
+                      {!field[5] ? (typeof country[field[0]] === 'undefined' ? index + 1 : (field[6]) ? this.formatDate(country[field[0]]) : country[field[0]]): ''} 
+                      {field[5] ? <u onClick={() => this.getChartData(country[field[0]], field[0])}><Popup trigger={<span>{country[field[0]]}</span>} modal closeOnDocumentClick>{close => (<Modal location={country[field[0]]} close={close} flag={field[4] ? country.countryInfo.flag : ''}/>)}</Popup></u> : ''}
+                    </td>
+                  ))}
                 </tr>
             ))}
             </tbody>

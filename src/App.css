@@ -46,6 +46,7 @@ tr:nth-child(even) {
 td u {cursor: pointer;}
 
 td.country {font-weight: bold;}
+td.country img {padding-right: 10px;}
 
 .loader {
   border: 16px solid #f3f3f3;
