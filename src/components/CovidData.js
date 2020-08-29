@@ -1,11 +1,26 @@
-import React from "react";
+import React, {Component} from "react";
 import _ from 'lodash';
 import Popup from "reactjs-popup";
 import { Pie } from 'react-chartjs-2';
 
-export default class CovidData extends React.Component {
+export default class CovidData extends Component {
   constructor(){
     super();
+    // field_name, field_width, field_lebel, field_sortable, field_have_img, field_have_chart, field_is_date
+    this.fieldArr = [
+      ['slno', '5', 'SL No.', 0, 0, 0, 0],
+      ['country', '15', 'Country', 1, 1, 1, 0],
+      ['continent', '8', 'Continent', 1, 0, 1, 0],
+      ['updated', '8', 'Last Updated', 1, 0, 0, 1],
+      ['tests', '8', 'Total Tests', 1, 0, 0, 0],
+      ['cases', '8', 'Total Cases', 1, 0, 0, 0],
+      ['critical', '8', 'Critical', 1, 0, 0, 0],
+      ['deaths', '8', 'Total Deaths', 1, 0, 0, 0],
+      ['recovered', '8', 'Total Recovered', 1, 0, 0, 0],
+      ['todayCases', '8', 'Today\'s Cases', 1, 0, 0, 0],
+      ['todayDeaths', '8', 'Today\'s Deaths', 1, 0, 0, 0],
+      ['todayRecovered', '8', 'Today\'s Recovery', 1, 0, 0, 0]
+    ];
     this.state = {
       loading: true,
       countries: null,
@@ -23,17 +38,17 @@ export default class CovidData extends React.Component {
     };
   }
 
-  async componentDidMount() {
+  componentDidMount = async ()  => {
     this.fetchData();
     setInterval(this.fetchData.bind(this), 60000);
   }
-  
-  async fetchData() {
+
+  fetchData = async ()  => {
     const url = "https://corona.lmao.ninja/v2/countries";
     this.setState({ isUpdating: true });
     const response = await fetch(url);
     const data = await response.json();
-    this.setState({ 
+    this.setState({
       allCountriesData: _.orderBy(data, [this.state.sort.column], [this.state.sort.direction]),
       loading: false,
       isUpdating: false,
@@ -41,7 +56,7 @@ export default class CovidData extends React.Component {
       this.dataMatch();
     })
   }
-  
+
   formatDate = (datestring) => {
     let dateTime = new Date(datestring);
     // year as 4 digits (YYYY)
@@ -63,14 +78,7 @@ export default class CovidData extends React.Component {
     var seconds = ("0" + dateTime.getSeconds()).slice(-2);
     return date + '/' + month + '/' + year + ' ' + hours + ':' + minutes + ':' + seconds;
   }
-  
-  continentInfo = (data) => {
-    //console.log(data);
-    const result = _.countBy(data, "continent");
-    //const result = data.map((items, index)=>({continent: items.continent, count: items.continent.length }))
-    console.log(result);
-  }
-  
+
   dataSortBy = (key) => {
     let direction = 'asc';
     if (key === this.state.sort.column) {
@@ -84,7 +92,7 @@ export default class CovidData extends React.Component {
       }
     });
   }
-  
+
   findData = (e) => {
     this.setState({
       search: e.target.value,
@@ -96,45 +104,54 @@ export default class CovidData extends React.Component {
   dataMatch = () => {
     this.setState({
       countries: _.filter(this.state.allCountriesData, function(cdata) {
-        return (cdata.country + '|' + cdata.continent + '|' + cdata.tests + '|'  + this.formatDate(cdata.updated) + '|' + cdata.cases + '|' + cdata.deaths + '|' + cdata.recovered + '|' + cdata.todayCases + '|' + cdata.todayDeaths).toLowerCase().indexOf(this.state.search.toLowerCase()) !== -1; 
+        let allfields;
+        this.fieldArr.forEach((field) => {
+          if (field[3]) {
+            let data = (field[6]) ? this.formatDate(cdata[field[0]]) : cdata[field[0]];
+            allfields = allfields  + '||' + data;
+          }
+        })
+        return allfields.toLowerCase().indexOf(this.state.search.toLowerCase()) !== -1;
       }.bind(this))
     });
   }
-   
+
   setLocationData = (location, type) => {
-    let locationArr = [];
+    let locationObj = {};
     let locationDataObj = _.filter(this.state.allCountriesData, [type, location]);
-    locationDataObj.forEach(function(loc){
-      locationArr['cases'] = (locationArr['cases'] ? locationArr['cases'] : 0) + loc.cases;
-      locationArr['active'] = (locationArr['active'] ? locationArr['active'] : 0) + loc.active;
-      locationArr['recovered'] = (locationArr['recovered'] ? locationArr['recovered'] : 0) + loc.recovered;
-      locationArr['deaths'] = (locationArr['deaths'] ? locationArr['deaths'] : 0) + loc.deaths;
+    locationDataObj.forEach(function(loc) {
+      locationObj = {
+        cases: (locationObj['cases'] ? locationObj['cases'] : 0) + loc.cases,
+        active: (locationObj['active'] ? locationObj['active'] : 0) + loc.active,
+        recovered: (locationObj['recovered'] ? locationObj['recovered'] : 0) + loc.recovered,
+        deaths: (locationObj['deaths'] ? locationObj['deaths'] : 0) + loc.deaths,
+      }
     })
-    return locationArr;
+    return locationObj;
   }
-  
+
   setChart = (e) => {
     this.setState({
       chartType: e.target.value,
     })
   }
-  
+
   getChartData = (location, type) => {
     this.setState({
       locationData: this.setLocationData(location, type),
     }, () => {
       this.setState({
-        chartData:{
+        chartData: {
           labels: ['Active', 'Recovered', 'Deaths'],
           datasets:[
             {
-              label:'Active Vs Recovered Vs Deaths',
-              data:[
+              label: 'Active Vs Recovered Vs Deaths',
+              data: [
                 (this.state.locationData['active']/this.state.locationData['cases'] * 100).toFixed(2),
                 (this.state.locationData['recovered']/this.state.locationData['cases'] * 100).toFixed(2),
                 (this.state.locationData['deaths']/this.state.locationData['cases'] * 100).toFixed(2),
               ],
-              backgroundColor:[
+              backgroundColor: [
                 'rgba(255, 206, 86, 0.6)',
                 'rgba(54, 162, 235, 0.6)',
                 'rgba(255, 99, 132, 0.6)',
@@ -145,7 +162,7 @@ export default class CovidData extends React.Component {
       })
     });
   }
-  
+
   render() {
     if (this.state.loading) {
       return <div><div className="loader"></div><h3>Loading.....</h3></div>;
@@ -154,17 +171,15 @@ export default class CovidData extends React.Component {
     if (!this.state.countries) {
       return <div>didn't get data</div>;
     }
-    
+
     const Modal = ({ location, close, flag }) => (
       <div className="modal">
-        <span className="close" onClick={close}>
-          &times;
-        </span>
+        <span className="close" onClick={close}>&times;</span>
         <div className="header">Statistics of {location} {flag ? <img src={flag} width="32" alt={location} valign="middle"/> : ''}</div>
         <div className="content">
           <Pie
-            data={this.state.chartData}
-            options={{
+            data = {this.state.chartData}
+            options = {{
               responsive: true,
               maintainAspectRatio: true,
               tooltips: {
@@ -179,21 +194,8 @@ export default class CovidData extends React.Component {
         </div>
       </div>
     );
-    
+
     let countries = this.state.countries;
-    // field_name, field_width, field_lebel, field_sortable, field_have_img, field_have_chart, field_is_date
-    const fieldArr = [
-      ['slno', '5', 'SL No.', 0, 0, 0, 0],
-      ['country', '15', 'Country', 1, 1, 1, 0],
-      ['continent', '10', 'Continent', 1, 0, 1, 0],
-      ['updated', '10', 'Last Updated', 1, 0, 0, 1],
-      ['tests', '10', 'Total Tests', 1, 0, 0, 0],
-      ['cases', '10', 'Cases', 1, 0, 0, 0],
-      ['deaths', '10', 'Deaths', 1, 0, 0, 0],
-      ['recovered', '10', 'Recovered', 1, 0, 0, 0],
-      ['todayCases', '10', 'Today\'s Cases', 1, 0, 0, 0],
-      ['todayDeaths', '10', 'Today\'s Deaths', 1, 0, 0, 0],
-    ];
 
     return (
       <div>
@@ -202,18 +204,20 @@ export default class CovidData extends React.Component {
           <table>
             <thead key="thead">
               <tr>
-                { fieldArr.map((field, index) => (
-                  <th key={index} width={field[1] + '%'} className={field[3] ? undefined : field[0]} onClick={field[3] ? () => this.dataSortBy(field[0]) : undefined}>{field[2]} {field[3] ? <small className={(this.state.sort.column === field[0]) ? this.state.sort.direction : ''}></small> : undefined}</th>
+                { this.fieldArr.map((field, index) => (
+                  <th key={index} width={field[1] + '%'} className={field[3] ? undefined : field[0]} onClick={field[3] ? () => this.dataSortBy(field[0]) : undefined}>
+                    {field[2]} {(field[3] && this.state.sort.column === field[0]) ? <small className={this.state.sort.direction}></small> : undefined}
+                  </th>
                 ))}
               </tr>
             </thead>
             <tbody>
             { countries.map((country, index) => (
-                <tr key={index}> 
-                  { fieldArr.map((field, inner_index) => (
+                <tr key={index}>
+                  { this.fieldArr.map((field, inner_index) => (
                     <td key={index + '_' + inner_index} className={field[0]}>
                       {field[4] ? <img src={country.countryInfo.flag} width="32" alt={country[field[0]]} valign="middle"/> : ''}
-                      {!field[5] ? (typeof country[field[0]] === 'undefined' ? index + 1 : (field[6]) ? this.formatDate(country[field[0]]) : country[field[0]]): ''} 
+                      {!field[5] ? (typeof country[field[0]] === 'undefined' ? index + 1 : (field[6]) ? this.formatDate(country[field[0]]) : country[field[0]]): ''}
                       {field[5] ? <u onClick={() => this.getChartData(country[field[0]], field[0])}><Popup trigger={<span>{country[field[0]]}</span>} modal closeOnDocumentClick>{close => (<Modal location={country[field[0]]} close={close} flag={field[4] ? country.countryInfo.flag : ''}/>)}</Popup></u> : ''}
                     </td>
                   ))}
@@ -225,5 +229,5 @@ export default class CovidData extends React.Component {
       </div>
     );
   }
-  
+
 }
